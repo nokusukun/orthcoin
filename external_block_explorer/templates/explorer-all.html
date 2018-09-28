@@ -97,36 +97,69 @@
 							<div class="description">There are {{bd.transactions.length}} transaction(s).</div>
 							<div class="list">
 								<div class="item" ng-repeat="tx in bd.transactions">
-									<div class="list">
-										<div class="item">
-											<i class="at icon"></i>
-											<div class="content">
-												<div class="header">Sender</div>
-												<code>{{tx.from}}</code>
+										<div class="ui horizontal divider">
+												-----------------------------------
 											</div>
-										</div>
-										<div class="item">
-											<i class="at icon"></i>
-											<div class="content">
-												<div class="header">Recipient</div>
-												<code>{{tx.to}}</code>
+											<div class="list">
+												<div class="item">
+													<i class="hashtag icon"></i>
+													<div class="content">
+														<div class="header">Transaction Hash</div>
+														{{tx.transactionDataHash}}
+													</div>
+												</div>
+		
+												<div class="item">
+													<i class="at icon"></i>
+													<div class="content">
+														<div class="header">Sender</div>
+														<a href="/address#{{tx.from}}">
+															<code ng-class="{'highlight': tx.from == address}">{{tx.from}}</code>
+														</a>
+													</div>
+												</div>
+												<div class="item">
+													<i class="at icon"></i>
+													<div class="content">
+														<div class="header">Recipient</div>
+														<a href="/address#{{tx.to}}">
+															<code ng-class="{'highlight': tx.to == address}">{{tx.to}}</code>
+														</a>
+													</div>
+												</div>
+												<div class="item">
+													<i class="coffee icon"></i>
+													<div class="content">
+														<div class="header">Value</div>
+														{{tx.value}}
+													</div>
+												</div>
+		
+												<div class="item">
+													<i class="calendar icon"></i>
+													<div class="content">
+														<div class="header">Transaction Signed</div>
+														{{ts2date(tx.dateCreated)}}
+													</div>
+												</div>
+		
+												<div class="item" ng-show="tx.minedInBlockIndex">
+													<i class="braille icon"></i>
+													<div class="content">
+														<div class="header">Mined in Block</div>
+														{{tx.minedInBlockIndex}}
+													</div>
+												</div>
+		
+												<div class="item">
+													<i class="paper plane icon"></i>
+													<div class="content">
+														<div class="header">Status</div>
+														<span ng-show="tx.transferSuccessful">Transaction Commited</span>
+														<span ng-hide="tx.transferSuccessful">Pending Transaction</span>
+													</div>
+												</div>
 											</div>
-										</div>
-										<div class="item">
-											<i class="circle outline icon"></i>
-											<div class="content">
-												<div class="header">Value</div>
-												{{tx.value}}
-											</div>
-										</div>
-										<div class="item">
-											<i class="paper plane icon"></i>
-											<div class="content">
-												<div class="header">Transaction Confirmed</div>
-												{{tx.transferSuccessful}}
-											</div>
-										</div>
-									</div>
 								</div>
 							</div>
 						</div>
@@ -143,13 +176,18 @@
 	</script>
 	<script type="text/javascript">
 		var app = angular.module('dashboard', []);
-		app.controller('ctrlDashboard', function ($scope, $http, $timeout) {
+		app.controller('ctrlDashboard', function ($scope, $http, $timeout, $location) {
 			$scope.blockDividerString = "Latest Block";
 			var node = new RainbowSocks("ws://nokusu:1120").start();
+			index = $location.hash();
+			console.log(index);
 			$timeout(() => {
 				node.request("block.chain.size", {}, (_, data) => {
 					console.log("Recieved data: ", data);
 					$scope.chainSize = data;
+					if(index){
+						data = Number.parseInt(index) + 1;
+					}
 					node.request("block.get", { index: data - 1 }, (_, data) => {
 						$scope.bd = data;
 						$scope.$apply();
