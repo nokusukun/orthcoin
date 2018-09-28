@@ -1,0 +1,6 @@
+nodeName: "orth"
+startingNode: {"name": "idofront", "host": "nokusu", "port": 1122}
+maxConnections: 10
+databaseName: "orth.store"
+host: "nokusu"
+port: "1123"

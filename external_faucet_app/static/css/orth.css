@@ -1,0 +1,32 @@
+code {
+	background: #D11350;
+	padding-left: .5rem;
+	padding-right: .5rem;
+	border-radius: 5rem;
+}
+
+.address-input {
+	font-family: monospace;
+}
+
+.c-yellow {
+	background: #fff9e5f2;
+}
+
+.c-red{
+	background: #7B3548;
+}
+.c-red:hover {
+	background: #CD5A7C;
+}
+
+.header-offset {
+	background: #BFBBC6;
+	max-height: 2.5rem;
+}
+
+.centerized {
+	width: 80vw;
+	margin: 0 auto;
+	padding: 1rem;
+}

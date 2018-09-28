@@ -1,0 +1,6 @@
+nodeName: "golden_city"
+startingNode: {"name": "idofront", "host": "nokusu", "port": 1122}
+maxConnections: 10
+databaseName: "g_city.store"
+host: "nokusu"
+port: "1124"

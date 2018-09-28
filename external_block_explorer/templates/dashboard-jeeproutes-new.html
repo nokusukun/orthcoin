@@ -1,0 +1,276 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+	<!-- Standard Meta -->
+	<meta charset="utf-8" />
+	<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+
+	<!-- Site Properties -->
+	<title>Map</title>
+	<script defer src="/static/fontawesome_all.js"></script>
+	<!-- Compiled and minified JavaScript -->
+	<script src="/static/angular.min.js"></script>
+	<script src="/static/jquery-3.2.1.min.js"></script>
+
+	<link rel="stylesheet" href="/static/semantic.min.css"/>
+	<script src="/static/semantic.min.js"></script>
+	<script type="text/javascript" src="/static/toastr.min.js"></script>
+	<link rel="stylesheet" type="text/css" href="/static/toastr.min.css">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+	<script src='/static/mapbox-gl.js'></script>
+	<link href='/static/mapbox-gl.css' rel='stylesheet' />
+
+</head>
+<body ng-app="dashboard" ng-controller='ctrlDashboard'>
+	<div class="ui container">
+		<br>
+		<div class="ui secondary menu">
+			<div class="header item">Dashboard</div>
+			<a class="item" href="/dashboard">
+				My Account
+			</a>
+			<a class="item active" href="/dashboard/places">
+				Places
+			</a>
+			<a class="item" href="/dashboard/jeeproutes">
+				Jeep Routes
+			</a>
+			<a  href="/dashboard/places/new" class="blue item"><i class="beer icon"></i>Add a Place</a></button>
+			<div class="right menu">
+				<div class="item">
+					<div class="ui icon input">
+						<input type="text" placeholder="Search...">
+						<i class="search link icon"></i>
+					</div>
+				</div>
+				<a class="ui item" ng-click="logout()">
+					Logout
+				</a>
+			</div>
+		</div>
+		<div class="ui divider"></div>
+		<br>
+		<div class="ui grid">
+			<div class="two wide column">
+				<div class="ui secondary vertical pointing fluid menu">
+					<a class="item">
+						Places
+					</a>
+					<a class="item active">
+						Add new
+					</a>
+				</div>
+			</div>
+			<div class="fourteen wide column">
+				<div id='map' style='width: auto; height: 400px;'></div>
+				<div class="ui form segment">
+					<div class="two fields">
+						<div class="field">
+							<label>ID</label>
+							<input type="text" ng-model="routeid" name="routeid" placeholder="">
+						</div>
+						<div class="field">
+							<label>Name</label>
+							<input type="text" ng-model="routename" name="name" placeholder="">
+						</div>
+					</div>
+					<div class="ui fluid blue submit button" ng-click="saveRoute()">Save</div>
+				</div>
+			</div>
+
+
+		</div>
+	</div>
+
+	<script>
+
+	</script>
+	<script src="/static/style-osm.js"></script>
+	<script type="text/javascript">
+		function parseParams(str) {
+			return str.split('&').reduce(function(params, param) {
+				var paramSplit = param.split('=').map(function(value) {
+					return decodeURIComponent(value.replace('+', ' '));
+				});
+				params[paramSplit[0]] = paramSplit[1];
+				return params;
+			}, {});
+		}
+
+		var app = angular.module('dashboard', []);
+		app.controller('ctrlDashboard', function($scope, $http, $timeout, $window) {
+			$scope.mapdata = {
+				"type": "FeatureCollection",
+				"features": [
+				{
+					"type": "Feature",
+					"properties": {},
+					"geometry": {
+						"type": "LineString",
+						"coordinates": [
+						]
+					}
+				}
+				]
+			}
+			var externalParams = parseParams(window.location.search.replace("?", ""));
+			console.log(externalParams);
+			if(externalParams.mode && externalParams.id){
+				console.log("Edit Mode")
+				if(externalParams.mode == "edit"){
+					$http.get(`/api/jeep/${externalParams.id}.geojson`).then( 
+						function (response){
+							$scope.mapdata = response.data;
+							$scope.routeid = externalParams.id;
+							$scope.routename = response.data._internal_name;
+							$scope.map.addLayer({
+								id: 'jeeproute',
+								type: 'line',
+								layout: {'line-cap': 'round', 
+								'line-join': 'bevel'},
+								source:{
+									type: 'geojson',
+									data: $scope.mapdata},
+									paint: {
+										"line-color": "#1111ff",
+										"line-width": 4,
+									}
+								});
+						});
+				}
+			}
+			$scope.map = new mapboxgl.Map({
+				container: 'map',
+				style: mapStyle,
+				center: [122.5564579,10.7255521],
+				maxBounds: [[122.3129,10.6491], [122.6548,10.9655]],
+				zoom: 14,
+				maxZoom: 19,
+				minZoom: 8
+			});
+			$scope.map.on('click', function (e) {
+				console.log(e);
+				toastr['success'](JSON.stringify(e.lngLat), "Map Coordinates");
+				$scope.mapdata.features[0].geometry.coordinates.push([e.lngLat.lng, e.lngLat.lat]);
+				$scope.$apply();
+				try{
+					$scope.map.removeLayer("jeeproute");
+					$scope.map.removeSource("jeeproute");
+				}catch (e){}
+				$scope.map.addLayer({
+					id: 'jeeproute',
+					type: 'line',
+					layout: {'line-cap': 'round', 
+					'line-join': 'bevel'},
+					source:{
+						type: 'geojson',
+						data: $scope.mapdata},
+						paint: {
+							"line-color": "#1111ff",
+							"line-width": 4,
+						}
+					});
+				
+			});
+			$scope.map.on('mousedown', function (e) {
+				console.log(e);
+				if(e.originalEvent.buttons == 2){
+					toastr['success'](JSON.stringify(e.lngLat), "Map Coordinates");
+					$scope.mapdata.features[0].geometry.coordinates.pop();
+					$scope.$apply();
+					try{
+						$scope.map.removeLayer("jeeproute");
+						$scope.map.removeSource("jeeproute");
+					}catch (e){}
+					$scope.map.addLayer({
+						id: 'jeeproute',
+						type: 'line',
+						layout: {'line-cap': 'round', 
+						'line-join': 'bevel'},
+						source:{
+							type: 'geojson',
+							data: $scope.mapdata},
+							paint: {
+								"line-color": "#1111ff",
+								"line-width": 4,
+							}
+						});
+				}
+
+				
+			});
+
+			console.log('Requesting Token');
+			request = {
+				method: 'POST',
+				url: '/api/account/details',
+				headers: {'Content-Type': 'application/json'},
+				data: {'token': localStorage.token},
+			}
+			$http(request).then(function(response){
+				console.log(response.data);
+				if(response.data.success){
+					toastr["success"]("Loaded Data!", "Debug")
+					$scope.details = response.data.result;
+					
+				}else{
+					window.location.href = '/login';
+					$scope.error = response.data.result;
+					toastr["error"]($scope.error, "Error")
+				}
+			}, function(){
+				$scope.error = "An unknown error occured!";
+			});
+
+			$scope.saveRoute = function(){
+				$scope.mapdata._internal_name = $scope.routename;
+				request = {
+					method: 'POST',
+					url: '/api/account/jeeproutes/new',
+					headers: {'Content-Type': 'application/json'},
+					data:{	id: $scope.routeid,
+						 	name: $scope.routename,
+						 	route: $scope.mapdata,
+						 	token: localStorage.token}
+				}
+				$http(request).then(function(response){
+					console.log(response.data);
+					if(response.data.success){
+						$scope.details = response.data.result;
+						toastr["success"]("Success", "Saved!");
+						window.location.href = '/dashboard/jeeproutes';
+					}else{
+						$scope.error = response.data.result;
+						toastr["error"]($scope.error, "Error")
+					}
+				}, function(){
+					$scope.error = response.data.result;
+					toastr["error"]($scope.error, "Error")
+				});
+
+			}
+			$scope.logout = function(){
+				localStorage.token = "";
+				window.location.href = '/login'
+			}
+		});
+	</script>
+	<script type="text/javascript">
+		angular.element(document).ready(function () {
+			$('.ui.dropdown.categories').dropdown();
+			$('.ui.dropdown.days').dropdown();
+
+			$(document).ready(function () {
+				console.log("Shits loading");
+				$('.ui.dropdown.type').dropdown();
+				console.log("Shits supposed to be loaded");
+			})
+
+
+		});
+	</script>
+</body>
+
+</html>

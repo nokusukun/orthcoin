@@ -1,0 +1,6 @@
+nodeName: "micro"
+startingNode: {"name": "golden_city", "host": "nokusu", "port": 1124}
+maxConnections: 10
+databaseName: "micro.store"
+host: "nokusu"
+port: "1125"

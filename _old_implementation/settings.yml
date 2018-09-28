@@ -1,0 +1,6 @@
+nodeName: "idofront"
+startingNode: null
+maxConnections: 10
+databaseName: "idofront.store"
+host: "nokusu"
+port: "1122"

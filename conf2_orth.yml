@@ -1,0 +1,6 @@
+nodeid: "ORTH"
+host: "nokusu"
+port: 1121
+initialnode:
+  nodeid: IDOFRONT 
+  host: "ws://nokusu:1120"

@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<!-- Standard Meta -->
+	<meta charset="utf-8" />
+	<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+
+	<!-- Site Properties -->
+	<title>Orth Explorer</title>
+	<script defer src="/static/fontawesome_all.js"></script>
+	<!-- Compiled and minified JavaScript -->
+	<script src="/static/angular.min.js"></script>
+	<script src="/static/jquery-3.2.1.min.js"></script>
+	<script src="/static/sorter/jquery.tablesorter.js"></script>
+	<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.3.1/css/all.css" integrity="sha384-mzrmE5qonljUremFsqc01SB46JvROS7bZs3IO2EmfFsd15uHvIt+Y8vEf7N7fWAU"
+	 crossorigin="anonymous">
+
+	<link rel="stylesheet" href="/static/semantic.min.css" />
+	<script src="/static/semantic.min.js"></script>
+	<script type="text/javascript" src="/static/toastr.min.js"></script>
+	<script src="/static/rainbow.js"></script>
+	<link rel="stylesheet" type="text/css" href="/static/toastr.min.css">
+</head>
+
+<body ng-app="dashboard" ng-controller='ctrlDashboard'>
+	<div class="ui cetered grid">
+		<div class="eight wide centered column">
+			<div class="ui segment" style="margin-top:1rem;">
+				<h4>Orth Block Explorer</h4>
+				<p>Blocks in network: {{chainSize}}</p>
+				<div class="ui icon fluid input">
+					<input type="text" ng-model="hashQuery" ng-click="search" placeholder="Block index or hash">
+					<i class="inverted circular search link icon"></i>
+				</div>
+				<div class="ui horizontal divider">
+					{{blockDividerString}}
+				</div>
+				<div class="segment" ng-show="bd.index == 0">
+					This seems to be the genesis block.
+				</div>
+				<div class="ui list">
+					<div class="item" data-popup="Block Hash">
+						<i class="info icon"></i>
+						<div class="content">
+							<div class="header">Index</div>
+							{{bd.index}}
+						</div>
+					</div>
+
+					<div class="item" data-popup="Block Hash">
+						<i class="hashtag icon"></i>
+						<div class="content">
+							<div class="header">Block Hash</div>
+							<code>BLOCK: {{bd.blockHash}}</code><br />
+							<code>BDATA:  {{bd.blockDataHash}}</code>
+						</div>
+					</div>
+
+					<div class="item" data-popup="Difficulty">
+						<i class="arrow left icon"></i>
+						<div class="content">
+							<div class="header">Previous Block Hash</div>
+							<a href="#" ng-click="loadBlockFromHash(bd.prevBlockHash)"><code>{{bd.prevBlockHash}}</code></a>
+						</div>
+					</div>
+
+					<div class="item" data-popup="Mined at">
+						<i class="calendar alternate icon"></i>
+						<div class="content">
+							<div class="header">Mined at</div>
+							{{bd.dateCreated}}
+						</div>
+					</div>
+
+					<div class="item" data-popup="Mined at">
+						<i class="at icon"></i>
+						<div class="content">
+							<div class="header">Mined by</div>
+							<code>{{bd.minedBy}}</code>
+						</div>
+					</div>
+
+					<div class="item" data-popup="Difficulty">
+						<i class="spinner icon"></i>
+						<div class="content">
+							<div class="header">Difficulty</div>
+							{{bd.difficulty}}
+						</div>
+					</div>
+
+					<div class="item" data-popup="Difficulty">
+						<i class="paper plane icon"></i>
+						<div class="content">
+							<div class="header">Transactions</div>
+							<div class="description">There are {{bd.transactions.length}} transaction(s).</div>
+							<div class="list">
+								<div class="item" ng-repeat="tx in bd.transactions">
+									<div class="list">
+										<div class="item">
+											<i class="at icon"></i>
+											<div class="content">
+												<div class="header">Sender</div>
+												<code>{{tx.from}}</code>
+											</div>
+										</div>
+										<div class="item">
+											<i class="at icon"></i>
+											<div class="content">
+												<div class="header">Recipient</div>
+												<code>{{tx.to}}</code>
+											</div>
+										</div>
+										<div class="item">
+											<i class="circle outline icon"></i>
+											<div class="content">
+												<div class="header">Value</div>
+												{{tx.value}}
+											</div>
+										</div>
+										<div class="item">
+											<i class="paper plane icon"></i>
+											<div class="content">
+												<div class="header">Transaction Confirmed</div>
+												{{tx.transferSuccessful}}
+											</div>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+
+				</div>
+			</div>
+		</div>
+
+	</div>
+
+	<script type="text/javascript">
+		$('.item').popup();
+	</script>
+	<script type="text/javascript">
+		var app = angular.module('dashboard', []);
+		app.controller('ctrlDashboard', function ($scope, $http, $timeout, $window) {
+			$scope.blockDividerString = "Latest Block";
+			var node = new RainbowSocks("ws://nokusu:1120").start();
+			$timeout(() => {
+				node.request("block.chain.size", {}, (_, data) => {
+					console.log("Recieved data: ", data);
+					$scope.chainSize = data;
+					node.request("block.get", { index: data - 1 }, (_, data) => {
+						$scope.bd = data;
+						$scope.$apply();
+						console.log("Latest Block: ", data);
+					});
+				});
+
+			}, 200);
+
+			$scope.loadBlockFromHash = function (hash) {
+				$timeout(() => {
+					node.request("block.get", { hash: hash }, (_, data) => {
+						$scope.bd = data;
+						$scope.$apply();
+						console.log("Latest Block: ", data);
+					});
+
+				}, 200);
+			}
+
+			$scope.loadBlockFromIndex = function (index) {
+				$timeout(() => {
+					node.request("block.get", { index: index }, (_, data) => {
+						$scope.bd = data;
+						$scope.$apply();
+						console.log("Latest Block: ", data);
+					});
+
+				}, 200);
+			}
+
+			$scope.search = function () {
+				q = $scope.hashQuery;
+				
+			}
+
+		});
+
+
+	</script>
+</body>
+
+</html>

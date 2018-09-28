@@ -1,0 +1,6 @@
+nodeid: "L6"
+host: "nokusu"
+port: 1122
+initialnode:
+  nodeid: IDOFRONT 
+  host: "ws://nokusu:1120"

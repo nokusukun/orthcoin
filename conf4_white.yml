@@ -1,0 +1,6 @@
+nodeid: "WHITE"
+host: "nokusu"
+port: 1125
+initialnode:
+  nodeid: ORTH 
+  host: "ws://nokusu:1121"
