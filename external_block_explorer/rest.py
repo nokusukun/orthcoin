@@ -10,9 +10,9 @@ app = Flask(__name__, static_url_path='/static', static_folder='static')
 def index():
     return send_from_directory('templates', "explorer-all.html")
 
-@app.route("/search")
+@app.route("/address")
 def search_page():
-    return send_from_directory('templates', "search.html")
+    return send_from_directory('templates', "explorer-address.html")
 
 @app.route("/login")
 def login_page():

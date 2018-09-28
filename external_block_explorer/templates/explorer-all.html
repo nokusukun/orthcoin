@@ -143,7 +143,7 @@
 	</script>
 	<script type="text/javascript">
 		var app = angular.module('dashboard', []);
-		app.controller('ctrlDashboard', function ($scope, $http, $timeout, $window) {
+		app.controller('ctrlDashboard', function ($scope, $http, $timeout) {
 			$scope.blockDividerString = "Latest Block";
 			var node = new RainbowSocks("ws://nokusu:1120").start();
 			$timeout(() => {
@@ -163,8 +163,10 @@
 				$timeout(() => {
 					node.request("block.get", { hash: hash }, (_, data) => {
 						$scope.bd = data;
+						$scope.blockDividerString = "Block " + data.index;
 						$scope.$apply();
 						console.log("Latest Block: ", data);
+						
 					});
 
 				}, 200);
@@ -183,7 +185,7 @@
 
 			$scope.search = function () {
 				q = $scope.hashQuery;
-				
+
 			}
 
 		});

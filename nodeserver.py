@@ -491,7 +491,7 @@ async def addressTransactions(sock, data):
         return data
 
     transactions = []
-    for block in NODE.chain[(data.get('range', 0) / -1):]:
+    for block in NODE.chain[(data.get('range', 0) // -1):]:
         transactions.extend(tag_pending(x, False) for x in block["transactions"] if x['from'] == data['address'] or x['to'] == data['address'])
 
     transactions.extend(tag_pending(x, True) for x in NODE.pending_transactions if x['from'] == data['address'] or x['to'] == data['address'])
